@@ -1,0 +1,3 @@
+#automap DXFEED,,,,,,,
+Symbol,Price Level,Note,Foreground Color,Background Color,Text Alignment,Diameter,Draw Note Price Horizontal Line
+NVDA,190.00,TEST,#ffffff,#FF0000,left,5,FALSE
