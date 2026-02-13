@@ -1,0 +1,6 @@
+#automap DXFEED,,,,,,,
+Symbol,Price Level,Note,Foreground Color,Background Color,Text Alignment,Diameter,Draw Note Price Horizontal Line
+NQH26,25000.00,TEST-NQH26,#ffffff,#FF0000,left,5,FALSE
+/NQH26,25000.00,TEST-slash-NQH26,#ffffff,#00FF00,left,5,FALSE
+/NQH26:XCME,25000.00,TEST-full,#ffffff,#0000FF,left,5,FALSE
+NQH26:XCME,25000.00,TEST-no-slash,#ffffff,#FFFF00,left,5,FALSE
