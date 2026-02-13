@@ -11,14 +11,14 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Symbol-mapping: dxFeed -> yfinance
-# Bookmap symbol (uten @DXFEED suffix) -> (yfinance ticker, type)
+# Bookmap Cloud Notes krever eksplisitt format (ikke automap for futures)
 SYMBOLS = {
-    "NVDA":              ("NVDA",  "stock"),
-    "AAPL":              ("AAPL",  "stock"),
-    "TSLA":              ("TSLA",  "stock"),
-    "AMD":               ("AMD",   "stock"),
-    "ESH26":             ("ES=F",  "es"),    # /ESH26 i Bookmap vises som ESH26 uten slash
-    "NQH26":             ("NQ=F",  "nq"),    # /NQH26 i Bookmap vises som NQH26 uten slash
+    "NVDA@DXFEED":              ("NVDA",  "stock"),
+    "AAPL@DXFEED":              ("AAPL",  "stock"),
+    "TSLA@DXFEED":              ("TSLA",  "stock"),
+    "AMD@DXFEED":               ("AMD",   "stock"),
+    "/ESH26:XCME@DXFEED":       ("ES=F",  "es"),
+    "/NQH26:XCME@DXFEED":       ("NQ=F",  "nq"),
 }
 
 # Farger
@@ -104,12 +104,10 @@ def make_note(symbol: str, price: float, note: str, fg: str, bg: str) -> str:
 def main():
     output_dir = Path(__file__).parent
     lines = [
-        "#automap DXFEED,,,,,,,",
         "Symbol,Price Level,Note,Foreground Color,Background Color,Text Alignment,Diameter,Draw Note Price Horizontal Line",
     ]
 
     for bm_sym, (yf_sym, sym_type) in SYMBOLS.items():
-        # bm_sym er allerede riktig format for Bookmap (NVDA, ESH26, NQH26)
         print(f"Henter data for {yf_sym} (Bookmap: {bm_sym})...")
         ticker = yf.Ticker(yf_sym)
 
