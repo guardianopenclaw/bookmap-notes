@@ -11,13 +11,14 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Symbol-mapping: dxFeed -> yfinance
+# Bookmap symbol (uten @DXFEED suffix) -> (yfinance ticker, type)
 SYMBOLS = {
-    "NVDA@DXFEED":              ("NVDA",  "stock"),
-    "AAPL@DXFEED":              ("AAPL",  "stock"),
-    "TSLA@DXFEED":              ("TSLA",  "stock"),
-    "AMD@DXFEED":               ("AMD",   "stock"),
-    "/ESH26:XCME@DXFEED":       ("ES=F",  "es"),
-    "/NQH26:XCME@DXFEED":       ("NQ=F",  "nq"),
+    "NVDA":              ("NVDA",  "stock"),
+    "AAPL":              ("AAPL",  "stock"),
+    "TSLA":              ("TSLA",  "stock"),
+    "AMD":               ("AMD",   "stock"),
+    "ESH26":             ("ES=F",  "es"),    # /ESH26 i Bookmap vises som ESH26 uten slash
+    "NQH26":             ("NQ=F",  "nq"),    # /NQH26 i Bookmap vises som NQH26 uten slash
 }
 
 # Farger
@@ -97,7 +98,7 @@ def compute_volume_profile(df) -> tuple[float, float, float]:
 
 
 def make_note(symbol: str, price: float, note: str, fg: str, bg: str) -> str:
-    return f"{symbol},{price:.2f},{note},{fg},{bg},left,3,TRUE"
+    return f"{symbol},{price:.2f},{note},{fg},{bg},left,3,FALSE"
 
 
 def main():
@@ -107,10 +108,9 @@ def main():
         "Symbol,Price Level,Note,Foreground Color,Background Color,Text Alignment,Diameter,Draw Note Price Horizontal Line",
     ]
 
-    for dxfeed_sym, (yf_sym, sym_type) in SYMBOLS.items():
-        # Strip provider-suffix for automap (NVDA@DXFEED -> NVDA, /ESH26:XCME@DXFEED -> /ESH26)
-        bm_sym = dxfeed_sym.replace("@DXFEED", "").replace(":XCME", "")
-        print(f"Henter data for {yf_sym}...")
+    for bm_sym, (yf_sym, sym_type) in SYMBOLS.items():
+        # bm_sym er allerede riktig format for Bookmap (NVDA, ESH26, NQH26)
+        print(f"Henter data for {yf_sym} (Bookmap: {bm_sym})...")
         ticker = yf.Ticker(yf_sym)
 
         # Daglig data for prev day og weekly
