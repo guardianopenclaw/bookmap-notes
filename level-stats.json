@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "created": "2026-02-13",
+    "description": "Bookmap Cloud Notes level response tracking"
+  },
+  "logs": [
+    {
+      "timestamp": "2026-02-13T17:30:00",
+      "symbol": "NQ",
+      "level": 25000.0,
+      "response": "bounce",
+      "level_type": "round_major",
+      "price_before": 24995.0,
+      "price_after": 25042.0,
+      "move_size": 47.0,
+      "confluence": [
+        "poc",
+        "half_hour"
+      ],
+      "notes": "Test entry",
+      "time_context": "half_hour"
+    }
+  ]
+}
