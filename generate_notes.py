@@ -21,30 +21,58 @@ SYMBOLS = {
     "/NQH26:XCME@DXFEED":       ("NQ=F",  "nq"),
 }
 
-# Farger
-BLUE   = "#0066FF"
-YELLOW = "#FFD700"
-GREY   = "#808080"
-GREEN  = "#00AA00"
-WHITE  = "#ffffff"
-BLACK  = "#000000"
+# Trafikklys-farger (høyest til lavest prioritet)
+RED    = "#FF0000"  # Kritiske nivåer
+ORANGE = "#FF8C00"  # Viktige nivåer
+YELLOW = "#FFD700"  # Sekundære nivåer
+WHITE  = "#ffffff"  # Tekst
+BLACK  = "#000000"  # Tekst (for gul bakgrunn)
 
 
-def get_round_levels(price: float, sym_type: str) -> list[float]:
-    """Generer runde/psykologiske prisnivåer rundt current price."""
+def get_round_levels(price: float, sym_type: str) -> list[tuple[float, str, str]]:
+    """
+    Generer runde prisnivåer med trafikklys-prioritering.
+    Returnerer: [(price, label, color), ...]
+    
+    Logikk:
+    - Store runde (x000, x500) → ORANGE
+    - Små runde (x100-x900, ikke x000/x500) → YELLOW
+    - Kvart-nivåer (.25, .50, .75) rundt x000/x500 → YELLOW
+    """
     if sym_type == "nq":
         step, spread = 50, 250
+        major_mod = 500  # 25000, 25500, osv
     elif sym_type == "es":
         step, spread = 25, 150
+        major_mod = 500  # 7000, 7500, osv
     else:
         step, spread = 5, 25
+        major_mod = 50   # 200, 250, osv
 
     base = round(price / step) * step
     levels = []
+    
     val = base - spread
     while val <= base + spread:
-        levels.append(round(val, 2))
+        val_rounded = round(val, 2)
+        
+        # Sjekk om dette er et stort rundt tall (x000 eller x500)
+        is_major = (val_rounded % major_mod == 0)
+        
+        if is_major:
+            # Hovedtall → ORANGE
+            levels.append((val_rounded, f"Round {val_rounded:.0f}", ORANGE))
+            
+            # Legg til kvart-nivåer (.25, .50, .75) rundt major levels
+            for quarter in [0.25, 0.50, 0.75]:
+                quarter_level = round(val_rounded + quarter, 2)
+                levels.append((quarter_level, f"Quarter {quarter_level:.2f}", YELLOW))
+        else:
+            # Små runde tall → YELLOW
+            levels.append((val_rounded, f"Round {val_rounded:.0f}", YELLOW))
+        
         val += step
+    
     return levels
 
 
@@ -130,33 +158,34 @@ def main():
         prev_high = round(float(prev["High"]), 2)
         prev_low = round(float(prev["Low"]), 2)
 
-        lines.append(make_note(bm_sym, prev_high, "Prev Day High", WHITE, BLUE))
-        lines.append(make_note(bm_sym, prev_low, "Prev Day Low", WHITE, BLUE))
+        # KRITISKE NIVÅER (RØD)
+        lines.append(make_note(bm_sym, prev_high, "Prev Day High", WHITE, RED))
+        lines.append(make_note(bm_sym, prev_low, "Prev Day Low", WHITE, RED))
 
         # Weekly high/low (siste 5 handelsdager)
         week_data = daily.tail(5)
         wk_high = round(float(week_data["High"].max()), 2)
         wk_low = round(float(week_data["Low"].min()), 2)
 
-        lines.append(make_note(bm_sym, wk_high, "Weekly High", WHITE, GREEN))
-        lines.append(make_note(bm_sym, wk_low, "Weekly Low", WHITE, GREEN))
+        lines.append(make_note(bm_sym, wk_high, "Weekly High", WHITE, RED))
+        lines.append(make_note(bm_sym, wk_low, "Weekly Low", WHITE, RED))
 
         # Volume Profile (30-min bars, 5 dager)
         try:
             intraday = ticker.history(period="5d", interval="30m")
             poc, vah, val_ = compute_volume_profile(intraday)
             if poc is not None:
-                lines.append(make_note(bm_sym, poc, "POC", BLACK, YELLOW))
-                lines.append(make_note(bm_sym, vah, "VAH", BLACK, YELLOW))
-                lines.append(make_note(bm_sym, val_, "VAL", BLACK, YELLOW))
+                lines.append(make_note(bm_sym, poc, "POC", BLACK, RED))      # POC er kritisk
+                lines.append(make_note(bm_sym, vah, "VAH", BLACK, ORANGE))   # VAH/VAL viktige
+                lines.append(make_note(bm_sym, val_, "VAL", BLACK, ORANGE))
             else:
                 print(f"  Kunne ikke beregne volume profile for {yf_sym}")
         except Exception as e:
             print(f"  FEIL intraday data: {e}")
 
-        # Runde tall
-        for level in get_round_levels(float(current), sym_type):
-            lines.append(make_note(bm_sym, level, f"Round {level:.0f}", WHITE, GREY))
+        # Runde tall (med trafikklys-prioritering)
+        for level, label, color in get_round_levels(float(current), sym_type):
+            lines.append(make_note(bm_sym, level, label, WHITE, color))
 
     csv_path = output_dir / "notes.csv"
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
