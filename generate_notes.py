@@ -170,6 +170,14 @@ def main():
         lines.append(make_note(bm_sym, wk_high, "Weekly High", WHITE, RED))
         lines.append(make_note(bm_sym, wk_low, "Weekly Low", WHITE, RED))
 
+        # Monthly high/low (siste 20 handelsdager ~1 måned)
+        month_data = daily.tail(20)
+        mo_high = round(float(month_data["High"].max()), 2)
+        mo_low = round(float(month_data["Low"].min()), 2)
+
+        lines.append(make_note(bm_sym, mo_high, "Monthly High", WHITE, RED))
+        lines.append(make_note(bm_sym, mo_low, "Monthly Low", WHITE, RED))
+
         # Volume Profile (30-min bars, 5 dager)
         try:
             intraday = ticker.history(period="5d", interval="30m")
